@@ -1,9 +1,12 @@
+'use client';
+
 import { ChevronRight, LogOut, Menu, SquareKanban, User, X } from 'lucide-react';
 import { signOut } from 'next-auth/react'; // Import signOut
 import { useEffect, useState } from 'react';
 
 export default function Sidebar() {
-  const [user, setUser] = useState<any>("");
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -12,10 +15,18 @@ export default function Sidebar() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch('/api/auth/user');
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data);
+      try {
+        const res = await fetch('/api/auth/user');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+        } else {
+          console.error('Failed to load sidebar user:', res.status, await res.text());
+        }
+      } catch (error) {
+        console.error('Sidebar fetch failed:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchUser();
@@ -25,7 +36,21 @@ export default function Sidebar() {
     await signOut({ callbackUrl: '/' });
   };
 
-  if (!user) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="w-64 bg-gray-800 text-white p-4">
+        <p>Loading sidebar...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="w-64 bg-gray-800 text-white p-4">
+        <p>User not authenticated</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-800 text-white transition-all duration-300 ease-in-out flex flex-col`}>
@@ -55,7 +80,12 @@ export default function Sidebar() {
             <li key={index}>
               <a
                 href={item.href || "#"}
-                onClick={item.action} // Add onClick for logout action
+                onClick={(event) => {
+                  if (item.action) {
+                    event.preventDefault();
+                    item.action();
+                  }
+                }}
                 className="flex items-center p-4 hover:bg-gray-700"
               >
                 <span className="mr-3">{item.icon}</span>

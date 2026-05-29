@@ -35,75 +35,89 @@ export default function Home() {
   }
   }
   return (
-    <div className="items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <div className="w-full rounded-lg border shadow-lg dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-          <div className="p-7 space-y-4 md:space-y-6 sm:p-8">
-            <Image
-              src="/images/g.png"
-              width={50}
-              height={50}
-              alt="Moneycache"
-              style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
-              className="rounded-full"
-            />
-             {!! error && (
-                          <div className="bg-destructive/15 p-3 rounded-md text-destructive flex items-center gap-x-2 text-sm mb-6">
-                            <TriangleAlert />
-                            <p>{error}</p>
-                          </div>
-                        )}
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-center text-gray-900 md:text-xl dark:text-white">
-              Sign in to your account
-            </h1>
-            <p className="text-red-500 text-sm"></p>
-            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950 sm:px-6">
+      <main className="w-full max-w-md">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900 dark:shadow-none">
+          <div className="px-8 py-10 sm:px-10">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <Image
+                src="/images/g.png"
+                width={56}
+                height={56}
+                alt="Moneycache"
+                className="rounded-full"
+              />
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+                Sign in to your account
+              </h1>
+              <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
+                Enter your credentials to access the dashboard and manage your book inventory.
+              </p>
+            </div>
+            {!!error && (
+              <div className="mt-6 rounded-xl bg-rose-100 px-4 py-3 text-sm text-rose-700 dark:bg-rose-900/20 dark:text-rose-200">
+                <div className="flex items-center gap-2">
+                  <TriangleAlert />
+                  <p>{error}</p>
+                </div>
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
-                <input 
-                  type="email" 
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Email address
+                </label>
+                <input
+                  type="email"
                   disabled={pending}
                   value={email}
-                  name="email" 
-                  id="email" 
+                  name="email"
+                  id="email"
                   onChange={(e) => setEmail(e.target.value)}
-                  className="text-sm bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                  placeholder="name@company.com" 
-                  required 
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-600 dark:focus:ring-slate-700"
+                  placeholder="name@company.com"
+                  required
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
-                <input 
-                  type="password" 
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Password
+                </label>
+                <input
+                  type="password"
                   disabled={pending}
                   value={password}
-                  name="password" 
+                  name="password"
                   onChange={(e) => setPassword(e.target.value)}
-                  id="password" 
-                  placeholder="••••••••" 
-                  className="text-sm bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                  required 
+                  id="password"
+                  placeholder="••••••••"
+                  className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-600 dark:focus:ring-slate-700"
+                  required
                 />
               </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input id="remember" type="checkbox" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800" />
-                  <label htmlFor="remember" className="ml-2 text-sm text-gray-500 dark:text-gray-300">Remember me</label>
-                </div>
-                <a href="/forgot-password" className="text-sm ml-2 text-primary-600 hover:underline dark:text-primary-500">Forgot password?</a>
+              <div className="flex items-center justify-between gap-4 text-sm text-slate-600 dark:text-slate-400">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    id="remember"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:focus:ring-slate-500"
+                  />
+                  Remember me
+                </label>
+                <Link href="/forgot-password" className="font-medium text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
+                  Forgot password?
+                </Link>
               </div>
-
-           <button 
-                type="submit" 
-                className="w-full bg-gray-500 text-white bg-primary-600 border border-white hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-              >Log In
+              <button
+                type="submit"
+                className="w-full rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-slate-200"
+              >
+                {pending ? 'Signing in...' : 'Log In'}
               </button>
-           
-              
             </form>
-            <p className="text-sm">Already have an Account? <Link href="/" className="hover:text-blue-700">Click Here</Link></p>
+            <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              New here? <Link href="/" className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300">Go back home</Link>
+            </p>
           </div>
         </div>
       </main>

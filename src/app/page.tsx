@@ -49,18 +49,19 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
   return (
-    <div className="items-center justify-items-center min-h-screen p-1 pb-20 gap-6 sm:p-9  font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <div className="w-full rounded-lg border shadow-lg dark:border md:mt-0 sm:max-w-md xl:p-0  dark:bg-gray-800 dark:border-gray-700">
-          <div className="p-4 space-y-3 md:space-y-4 sm:p-8">
-            <Image
-              src="/images/g.png"
-              width={50}
-              height={50}
-              alt="Moneycache"
-              style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
-              className="rounded-full"
-            />
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950 sm:px-6 font-[family-name:var(--font-geist-sans)]">
+      <main className="w-full max-w-md">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900 dark:shadow-none">
+          <div className="px-8 py-10 sm:px-10">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <Image
+                src="/images/g.png"
+                width={50}
+                height={50}
+                alt="Moneycache"
+                className="rounded-full"
+              />
+            </div>
             {!! error && (
               <div className="bg-destructive/15 p-3 rounded-md text-destructive flex items-center gap-x-2 text-sm mb-6">
                 <TriangleAlert />
@@ -138,10 +139,10 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
                 <button 
                 type="submit" 
-                className="w-full bg-gray-500 text-white bg-primary-600 border border-white hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-              >Log In
+                className="w-full rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-slate-200 "
+              >Register
               </button>
-              <p className="text=sm">Already Have an Account? <Link href="/signin" className="hover:text-blue-500">Click me!</Link></p>
+              <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">Already Have an Account? <Link href="/signin" className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300">Click me!</Link></p>
             </form>
           </div>
         </div>

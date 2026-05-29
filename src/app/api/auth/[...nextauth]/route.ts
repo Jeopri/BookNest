@@ -19,7 +19,7 @@ const handler = NextAuth({
                 },
                 async authorize(credentials){
                     try{
-                        connectToDatabase();
+                        await connectToDatabase();
                         const user = await User.findOne({
                             email: credentials?.email
                         });
