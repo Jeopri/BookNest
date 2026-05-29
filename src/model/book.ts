@@ -38,4 +38,6 @@ const BookSchema: Schema<IBook> = new Schema(
 );
 
 // Prevent model overwrite on hot-reload
-export default mongoose.models.Book || mongoose.model<IBook>('Book', BookSchema);
+const Books =  mongoose.models.Book || mongoose.model<IBook>('Book', BookSchema);
+
+export default Books;

@@ -1,6 +1,6 @@
 // app/api/books/route.ts
 import connectToDatabase from '@/lib/mongo';
-import Book from '@/models/Book'; // adjust path if needed
+import Book from '@/model/book';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
