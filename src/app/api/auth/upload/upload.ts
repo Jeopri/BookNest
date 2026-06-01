@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import cloudinary from '@/lib/cloudinary';
 import formidable from 'formidable';
-import fs from 'fs';
+
 
 export const config = {
   api: {

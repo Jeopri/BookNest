@@ -7,4 +7,15 @@ cloudinary.config({
   secure: true,
 });
 
+export const uploadFile = async (filePath: string) => {
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      resource_type: 'auto',
+    });
+    return result;
+  } catch (error) {
+    throw new Error(`Cloudinary upload failed: ${error}`);
+  }
+};
+
 export default cloudinary;

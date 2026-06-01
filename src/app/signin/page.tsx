@@ -116,7 +116,7 @@ export default function Home() {
               </button>
             </form>
             <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-              New here? <Link href="/" className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300">Go back home</Link>
+              New here? <Link href="/register" className="font-medium text-slate-900 hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300">Go back home</Link>
             </p>
           </div>
         </div>
