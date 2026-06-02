@@ -16,7 +16,7 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPending(true);
-
+    
     const res = await signIn("credentials", {
       email,
       password,
@@ -32,6 +32,7 @@ export default function Home() {
     toast.error("Invalid Credentials")
   }else {
     toast.error("Something went wrong")
+    setPending(false);
   }
   }
   return (

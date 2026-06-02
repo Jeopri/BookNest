@@ -1,12 +1,10 @@
 'use client';
 
 import { ChevronRight, LogOut, Menu, SquareKanban, User, X } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react'; // Import signOut
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 
 export default function Sidebar() {
-  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -14,8 +12,6 @@ export default function Sidebar() {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-
-  const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -73,7 +69,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto pt-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <nav className="flex-1 overflow-y-auto pt-3">
         <div className="px-4 pb-2 text-xs font-semibold uppercase tracking-[0.24em] text-gray-400">
           MAIN FEATURES
         </div>
@@ -81,6 +77,9 @@ export default function Sidebar() {
           {[
             { name: 'Dashboard', href: '/dashboard', icon: <SquareKanban size={20} /> },
             { name: 'Books', href: '/listing', icon: <SquareKanban size={20} /> },
+            { name: 'Categories / Genres', href: '/genres', icon: <SquareKanban size={20} /> },
+            { name: 'Authors', href: '/authors', icon: <SquareKanban size={20} /> },
+            { name: 'Publishers', href: '/publishers', icon: <SquareKanban size={20} /> },
             { name: 'Borrow Books', href: '/borrow', icon: <SquareKanban size={20} /> },
             { name: 'Return Books', href: '/return', icon: <SquareKanban size={20} /> },
             { name: 'Overdue', href: '/overdue', icon: <SquareKanban size={20} /> },
@@ -91,9 +90,7 @@ export default function Sidebar() {
             <li key={index}>
               <a
                 href={item.href || "#"}
-                className={`flex items-center p-3 transition ${
-                  isActive(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
-                }`}
+                className="flex items-center p-3 hover:bg-gray-700"
               >
                 <span className="mr-2">{item.icon}</span>
                 {sidebarOpen && <span className="text-sm">{item.name}</span>}
@@ -110,13 +107,12 @@ export default function Sidebar() {
             { name: 'Users', href: '/users', icon: <User size={20} /> },
             { name: 'Roles & Permissions', href: '/roles', icon: <User size={20} /> },
             { name: 'Profile', href: '/profile', icon: <User size={20} /> },
+            { name: 'Account Settings', href: '/settings', icon: <User size={20} /> },
           ].map((item, index) => (
             <li key={`user-${index}`}>
               <a
                 href={item.href || "#"}
-                className={`flex items-center p-3 transition ${
-                  isActive(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
-                }`}
+                className="flex items-center p-3 hover:bg-gray-700"
               >
                 <span className="mr-2">{item.icon}</span>
                 {sidebarOpen && <span className="text-sm">{item.name}</span>}
@@ -130,15 +126,14 @@ export default function Sidebar() {
         </div>
         <ul className="space-y-1">
           {[
+            { name: 'Activity Logs', href: '/logs/activity', icon: <ChevronRight size={20} /> },
             { name: 'Borrow History Logs', href: '/logs/borrow-history', icon: <ChevronRight size={20} /> },
             { name: 'System Logs', href: '/logs/system', icon: <ChevronRight size={20} /> },
           ].map((item, index) => (
             <li key={`log-${index}`}>
               <a
                 href={item.href || "#"}
-                className={`flex items-center p-3 transition ${
-                  isActive(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
-                }`}
+                className="flex items-center p-3 hover:bg-gray-700"
               >
                 <span className="mr-2">{item.icon}</span>
                 {sidebarOpen && <span className="text-sm">{item.name}</span>}
@@ -148,43 +143,19 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-<div className="p-3 border-t border-gray-700">
-  {sidebarOpen ? (
-    <div className="flex items-center justify-between">
-      
-      {/* Left: User Info */}
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gray-500"></div>
-        <div>
-          <p className="text-sm font-semibold">
-            {user.firstname} {user.lastname}
-          </p>
-          <p className="text-xs text-gray-400">{user.email}</p>
-        </div>
+      <div className="p-3 border-t border-gray-700">
+        {sidebarOpen ? (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gray-500"></div>
+            <div>
+              <p className="text-sm font-semibold">{user.firstname} {user.lastname}</p>
+              <p className="text-xs text-gray-400">{user.email}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-500 mx-auto"></div>
+        )}
       </div>
-
-      {/* Right: Logout Button */}
-      <button
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        className="text-gray-300 hover:text-red-500 transition"
-        title="Logout"
-      >
-        <LogOut size={18} />
-      </button>
-
-    </div>
-  ) : (
-    <div className="flex justify-center">
-      <button
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        className="text-gray-300 hover:text-red-500 transition"
-        title="Logout"
-      >
-        <LogOut size={18} />
-      </button>
-    </div>
-  )}
-</div>
     </div>
   );
 }
