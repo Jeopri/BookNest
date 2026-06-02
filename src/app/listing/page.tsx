@@ -335,7 +335,7 @@ const handleAddBook = async (e: React.FormEvent) => {
                     </div>
                    
                     {editModalOpen && bookToEdit && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
             {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b">
@@ -534,7 +534,7 @@ const handleAddBook = async (e: React.FormEvent) => {
     </div>
 )}
                     {addModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
             {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b">
@@ -824,108 +824,107 @@ const handleAddBook = async (e: React.FormEvent) => {
                         </div>
                      
                         {/* Card Grid */}
-{/* Card Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {paginatedData.map((book) => (
                                 <div 
                                     key={book.id} 
-                                    className={`border rounded-lg overflow-hidden shadow-sm ${
-                                        selectedRows.includes(book.id) ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200"
-                                    }`}
+                                    className="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden border border-gray-100"
                                 >
-                                    <div className="relative">
-                                        {/* Selection checkbox */}
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedRows.includes(book.id)}
-                                            onChange={() => toggleRowSelection(book.id)}
-                                            className="absolute top-2 right-2 z-10 w-5 h-5"
-                                        />
-                                        
-                                        {/* Book cover image - fixed height container */}
-                                        <div className="flex justify-center items-center bg-gray-50 h-60">
-                                            <div className="overflow-hidden w-40 h-56 relative">
-                                                <Image 
-                                                    src={book.coverImage}
-                                                    alt={book.title}
-                                                    width={160}
-                                                    height={224}
-                                                    className="object-contain"
-                                                    style={{ maxWidth: '100%', maxHeight: '100%' }}
-                                                />
+                                    {/* Gradient overlay on hover */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    
+                                    {/* Status Badge */}
+                                    <div className="absolute top-3 right-3 z-10">
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                                            book.status === 'Available' 
+                                                ? 'bg-emerald-100 text-emerald-800' 
+                                                : 'bg-amber-100 text-amber-800'
+                                        }`}>
+                                            <span className={`w-2 h-2 rounded-full mr-2 ${book.status === 'Available' ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
+                                            {book.status}
+                                        </span>
+                                    </div>
+
+                                    {/* Selection checkbox */}
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRows.includes(book.id)}
+                                        onChange={() => toggleRowSelection(book.id)}
+                                        className="absolute top-3 left-3 z-10 w-5 h-5"
+                                    />
+
+                                    {/* Book Cover Image */}
+                                    <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
+                                        {book.coverImage ? (
+                                            <Image
+                                                src={book.coverImage}
+                                                alt={book.title}
+                                                width={160}
+                                                height={224}
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <div className="text-center text-gray-400">
+                                                <span className="text-sm">No Image</span>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                     
-                                    <div className="p-4">
+                                    <div className="p-4 relative z-5">
+                                        {/* Title */}
                                         {visibleColumns.title && (
-                                            <h4 className="font-medium text-gray-900 text-lg mb-1 line-clamp-1">{book.title}</h4>
+                                            <h4 className="font-bold text-gray-900 text-base mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">{book.title}</h4>
                                         )}
                                         
+                                        {/* Author */}
                                         {visibleColumns.author && (
-                                            <p className="text-sm text-gray-600 mb-3">by {book.author}</p>
+                                            <p className="text-xs text-gray-500 mb-3 font-medium">by <span className="text-gray-700">{book.author}</span></p>
                                         )}
                                         
-                                        <div className="space-y-2 text-sm mb-3">
-                                            {visibleColumns.id && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">ID:</span>
-                                                    <span className="text-gray-900">{book.id}</span>
-                                                </div>
-                                            )}
-                                            
+                                        {/* Info Grid */}
+                                        <div className="space-y-2 text-xs mb-4 bg-gray-50 -mx-4 px-4 py-3 rounded-lg">
                                             {visibleColumns.genre && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Genre:</span>
-                                                    <span className="text-gray-900">{book.genre}</span>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500 font-medium">Genre</span>
+                                                    <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">{book.genre}</span>
                                                 </div>
                                             )}
                                             
                                             {visibleColumns.publishDate && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Published:</span>
-                                                    <span className="text-gray-900">{book.publishDate}</span>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500 font-medium">Published</span>
+                                                    <span className="text-gray-700 font-semibold">{book.publishDate}</span>
                                                 </div>
                                             )}
                                             
                                             {visibleColumns.price && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Price:</span>
-                                                    <span className="text-gray-900 font-medium">{book.price}</span>
-                                                </div>
-                                            )}
-                                            
-                                            {visibleColumns.status && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Status:</span>
-                                                    <span className={`${
-                                                        book.status === 'Available' ? 'text-green-600' : 'text-amber-600'
-                                                    } font-medium`}>
-                                                        {book.status}
-                                                    </span>
+                                                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                                                    <span className="text-gray-500 font-medium">Price</span>
+                                                    <span className="text-lg font-bold text-blue-600">{book.price}</span>
                                                 </div>
                                             )}
                                         </div>
                                         
+                                        {/* Action Buttons */}
                                         {visibleColumns.actions && (
-                                            <div className="flex justify-between border-t pt-3 mt-3">
+                                            <div className="flex gap-2 pt-3 border-t border-gray-200">
                                                 <button 
-                                                    className="flex items-center text-blue-600 hover:text-blue-800"
+                                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                                                     onClick={() => handleViewBook(book)}
                                                 >
-                                                    <Eye size={16} className="mr-1" />
-                                                    <span>View</span>
+                                                    <Eye size={14} />
+                                                    <span className="hidden sm:inline">View</span>
                                                 </button>
                                                 <button 
-                                                    className="flex items-center text-green-600 hover:text-green-800" 
+                                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" 
                                                     onClick={() => handleEditBook(book)}
                                                 >
-                                                    <Edit size={16} className="mr-1" />
-                                                    <span>Edit</span>
+                                                    <Edit size={14} />
+                                                    <span className="hidden sm:inline">Edit</span>
                                                 </button>
-                                                <button className="flex items-center text-red-600 hover:text-red-800">
-                                                    <Trash size={16} className="mr-1" />
-                                                    <span>Delete</span>
+                                                <button className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                                                    <Trash size={14} />
+                                                    <span className="hidden sm:inline">Delete</span>
                                                 </button>
                                             </div>
                                         )}
@@ -1014,7 +1013,7 @@ const handleAddBook = async (e: React.FormEvent) => {
 
             {/* View Book Modal */}
             {viewModalOpen && selectedBook && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
                         {/* Modal Header */}
                         <div className="flex justify-between items-center p-4 border-b">
