@@ -5,20 +5,30 @@ import Sidebar from '@/components/util/Sidebar';
 import { Milestone, User, UserCheck } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useDeviceInfo } from '@/hook/useDevice';
 
 export default function Dashboard() {
     const [user, setUser] = useState<any>("");
     const [activeTab, setActiveTab] = useState('profile');
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+    const { label } = useDeviceInfo();
+    const [ip, setIp] = useState('');
 
+
+
+useEffect (() => {
+    fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => setIp(data.ip));
+}, [])
   
         useEffect(() => {
             const fetchUser = async () => {
               const res = await fetch('/api/auth/user');
               if (res.ok) {
                 const data = await res.json();
-                setUser(data);
+                setUser(data.user);
               }
             };
             fetchUser();
@@ -29,11 +39,11 @@ export default function Dashboard() {
             fullName: `${user?.firstname} ${user?.lastname}`, // <-- added here
             email: user?.email, 
             dateJoined: new Date(user?.createdAt).toLocaleDateString(),
-            lastLogin: new Date(user?.createdAt).toLocaleDateString(),
+            lastLogin: new Date().toLocaleDateString(),
             isVerified: true, 
             recentActivity: [
-                { type: "Login", date: new Date(user?.createdAt).toLocaleDateString(), details: "Logged in from Windows" },
-                { type: "Profile", date: "April 15, 2025", details: "" }
+                { type: "Login", date: new Date().toLocaleDateString(), details: "Logged in from Windows" },
+                { type: "Profile", date: new Date().toLocaleDateString(), details: "Logged in" }
             ]
         };
 
@@ -106,7 +116,7 @@ export default function Dashboard() {
                                                 <div className="flex items-center mb-2">
                                                     <h3 className="text-lg font-bold">{userData.fullName}</h3>
                                                     {userData.isVerified && (
-                                                        <span className="ml-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Verified</span>
+                                                        <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Admin</span>
                                                     )}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
@@ -275,17 +285,10 @@ export default function Dashboard() {
                                             <div className="bg-gray-50 p-4 rounded-lg">
                                                 <div className="mb-3 pb-3 border-b">
                                                     <div className="flex justify-between mb-1">
-                                                        <p className="font-medium">Chrome / Windows</p>
-                                                        <p className="text-sm text-gray-500">April 20, 2025</p>
+                                                        <p className="font-medium">{label}</p>  
+                                                        <p className="text-sm text-gray-500">{new Date().toLocaleDateString()}</p>
                                                     </div>
-                                                    <p className="text-sm text-gray-600">192.168.1.1 • Current session</p>
-                                                </div>
-                                                <div>
-                                                    <div className="flex justify-between mb-1">
-                                                        <p className="font-medium">Safari / MacOS</p>
-                                                        <p className="text-sm text-gray-500">April 18, 2025</p>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600">192.168.1.2</p>
+                                                    <p className="text-sm text-gray-600">{ip} • Current session</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -306,13 +309,6 @@ export default function Dashboard() {
                                     </div>
                                     <p className="text-gray-600 text-center">Feature under development</p>
                                     <p className="text-sm text-gray-500 text-center mt-2">Notification preferences will be available soon.</p>
-                                </div>
-                            )}
-
-                            {userData.role === 'Admin' && activeTab === 'admin' && (
-                                <div>
-                                    <h4 className="font-medium mb-4">Admin Actions</h4>
-                                    {/* Admin-specific features would go here */}
                                 </div>
                             )}
                         </div>

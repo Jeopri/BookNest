@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, LogOut, Menu, SquareKanban, User, X } from 'lucide-react';
+import { ChevronRight, LogOut, Menu, SquareKanban, User, X, BookOpenText, Library, ClipboardCheck, BookOpenCheck, Book  } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -23,7 +23,7 @@ export default function Sidebar() {
         const res = await fetch('/api/auth/user');
         if (res.ok) {
           const data = await res.json();
-          setUser(data);
+          setUser(data.user);
         } else {
           console.error('Failed to load sidebar user:', res.status, await res.text());
         }
@@ -37,7 +37,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/' });
+    await signOut({ callbackUrl: '/signin' });
   };
 
   if (loading) {
@@ -75,15 +75,15 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto pt-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div className="px-4 pb-2 text-xs font-semibold uppercase tracking-[0.24em] text-gray-400">
-          MAIN FEATURES
+          FEATURES
         </div>
         <ul className="space-y-1">
           {[
             { name: 'Dashboard', href: '/dashboard', icon: <SquareKanban size={20} /> },
-            { name: 'Books', href: '/listing', icon: <SquareKanban size={20} /> },
+            { name: 'Books', href: '/listing', icon: <Library size={20} /> },
             { name: 'Borrow Books', href: '/borrow', icon: <SquareKanban size={20} /> },
-            { name: 'Return Books', href: '/return', icon: <SquareKanban size={20} /> },
-            { name: 'Overdue', href: '/overdue', icon: <SquareKanban size={20} /> },
+            { name: 'Return Books', href: '/return', icon: <BookOpenCheck size={20} /> },
+            { name: 'Overdue', href: '/overdue', icon: <ClipboardCheck size={20} /> },
             { name: 'Reservations', href: '/reservations', icon: <SquareKanban size={20} /> },
             { name: 'Reports / Analytics', href: '/reports', icon: <SquareKanban size={20} /> },
             { name: 'AI Recommendations', href: '/recommendations', icon: <SquareKanban size={20} /> },
@@ -152,7 +152,7 @@ export default function Sidebar() {
   {sidebarOpen ? (
     <div className="flex items-center justify-between">
       
-      {/* Left: User Info */}
+      {/* User info */}
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-gray-500"></div>
         <div>
@@ -163,9 +163,9 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Right: Logout Button */}
+      {/* Logout */}
       <button
-        onClick={() => signOut({ callbackUrl: "/login" })}
+        onClick={handleLogout}
         className="text-gray-300 hover:text-red-500 transition"
         title="Logout"
       >
@@ -176,7 +176,7 @@ export default function Sidebar() {
   ) : (
     <div className="flex justify-center">
       <button
-        onClick={() => signOut({ callbackUrl: "/login" })}
+        onClick={handleLogout}
         className="text-gray-300 hover:text-red-500 transition"
         title="Logout"
       >

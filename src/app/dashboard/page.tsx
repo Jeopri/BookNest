@@ -5,13 +5,45 @@ import Footer from '@/components/util/Footer';
 import Header from '@/components/util/Header';
 import Sidebar from '@/components/util/Sidebar';
 import { Milestone, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
+const [user, setUser] = useState<any>(null);
+
+
+useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const res = await fetch('/api/auth/user');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+      }else{
+        console.error('Failed to load user:', res.status, await res.text());
+      } 
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+    }
+  }
+  fetchUser();
+
+  const interval =  setInterval(fetchUser, 10000);
+  return () => clearInterval(interval);
+}, []);
+
 
     const CardData = [
-        { title: 'User', icon: <User className="text-green-500" />, description:'Total Users: 1' },
-        { title: 'Appointments', icon: <Milestone className="text-yellow-500" />, description:'Total Books: 12' },
-    ]
+  {
+    title: 'User',
+    icon: <User className="text-green-500" />,
+    description: `Total Users: ${user ? user.totalUsers : 'Loading...'}`,
+  },
+  {
+    title: 'Appointments',
+    icon: <Milestone className="text-yellow-500" />,
+    description: 'Total Books: 12',
+  },
+];
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
