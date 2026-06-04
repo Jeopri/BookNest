@@ -1,30 +1,29 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import cloudinary from '@/lib/cloudinary';
-import formidable from 'formidable';
+import { NextRequest, NextResponse } from 'next/server';
+import { uploadFile } from '@/lib/cloudinary';
 
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).end();
+    // Convert File → base64 because Cloudinary SDK needs a string, not a File object
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const dataUri = `data:${file.type};base64,${base64}`;
 
-  const form = new formidable.IncomingForm();
+    const result = await uploadFile(dataUri);
 
-  form.parse(req, async (err, fields, files) => {
-    if (err) return res.status(500).json({ error: 'Error parsing the file' });
-
-    const file = files.file?.[0];
-
-    if (!file) return res.status(400).json({ error: 'No file uploaded' });
-
-    const result = await cloudinary.uploader.upload(file.filepath, {
-      folder: 'nextjs_uploads',
+    return NextResponse.json({
+      url: result.secure_url,       // ← "https://res.cloudinary.com/..."
+      public_id: result.public_id,  // ← for deletion later
     });
 
-    res.status(200).json({ url: result.secure_url });
-  });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+  }
 }

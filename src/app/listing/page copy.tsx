@@ -3,111 +3,179 @@ import Footer from '@/components/util/Footer';
 import Header from '@/components/util/Header';
 import Sidebar from '@/components/util/Sidebar';
 import { ArrowUpDown, Check, ChevronLeft, ChevronRight, Edit, Eye, Filter, Trash, X } from 'lucide-react';
+import { CldImage } from 'next-cloudinary';
 import Image from 'next/image';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
+
+type Book = {
+  id: number;
+  title: string;
+  author: string;
+  genre: string;
+  status: string;
+  publishDate: string;
+  price: string;
+  coverImage: string;
+  description?: string;
+};
+
+type SortKey = 'id' | 'title' | 'author' | 'genre' | 'status' | 'publishDate' | 'price';
+
+type SortConfig = {
+  key: SortKey;
+  direction: 'asc' | 'desc';
+};
+
+type NewBookForm = {
+  title: string;
+  author: string;
+  genre: string;
+  status: string;
+  publishDate: string;
+  price: string;
+  description: string;
+  coverImage: File | null;
+  coverImagePreview: string | null;
+};
+
+type VisibleColumns = Record<'id' | 'title' | 'author' | 'genre' | 'status' | 'publishDate' | 'price' | 'actions', boolean>;
+
+type EditableBook = Omit<Book, 'coverImage'> & {
+  coverImage: string | null;
+  coverImageFile?: File | null;
+};
+
+const apiBooksUrl = '/api/books';
+
+function getSortableValue(book: Book, key: SortKey): string | number {
+  if (key === 'price') {
+    return parseFloat(book.price.replace(/^[^0-9.-]+/, '')) || 0;
+  }
+  return book[key].toString().toLowerCase();
+}
+
+const initialBooks: Book[] = [
+  { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', genre: 'Classic', status: 'Available', publishDate: '1925-04-10', price: '$12.99', coverImage: '/images/z.jpg' },
+  { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee', genre: 'Fiction', status: 'Available', publishDate: '1960-07-11', price: '$14.99', coverImage: '/images/m.png' },
+  { id: 3, title: '1984', author: 'George Orwell', genre: 'Science Fiction', status: 'On Loan', publishDate: '1949-06-08', price: '$11.99', coverImage: '/images/w.JPG' },
+  { id: 4, title: 'Pride and Prejudice', author: 'Jane Austen', genre: 'Romance', status: 'Available', publishDate: '1813-01-28', price: '$9.99', coverImage: '/api/placeholder/200/300' },
+  { id: 5, title: 'The Hobbit', author: 'J.R.R. Tolkien', genre: 'Fantasy', status: 'Available', publishDate: '1937-09-21', price: '$13.99', coverImage: '/api/placeholder/200/300' },
+  { id: 6, title: 'The Catcher in the Rye', author: 'J.D. Salinger', genre: 'Coming-of-age', status: 'On Loan', publishDate: '1951-07-16', price: '$10.99', coverImage: '/api/placeholder/200/300' },
+  { id: 7, title: 'Brave New World', author: 'Aldous Huxley', genre: 'Science Fiction', status: 'Available', publishDate: '1932-06-01', price: '$12.49', coverImage: '/api/placeholder/200/300' },
+  { id: 8, title: 'Lord of the Flies', author: 'William Golding', genre: 'Adventure', status: 'Available', publishDate: '1954-09-17', price: '$11.49', coverImage: '/api/placeholder/200/300' },
+  { id: 9, title: 'The Alchemist', author: 'Paulo Coelho', genre: 'Fantasy', status: 'On Loan', publishDate: '1988-01-01', price: '$10.99', coverImage: '/api/placeholder/200/300' },
+  { id: 10, title: 'Moby Dick', author: 'Herman Melville', genre: 'Adventure', status: 'Available', publishDate: '1851-10-18', price: '$12.99', coverImage: '/api/placeholder/200/300' },
+  { id: 11, title: 'Wuthering Heights', author: 'Emily Brontë', genre: 'Gothic', status: 'Available', publishDate: '1847-12-19', price: '$9.99', coverImage: '/api/placeholder/200/300' },
+  { id: 12, title: 'Don Quixote', author: 'Miguel de Cervantes', genre: 'Classic', status: 'On Loan', publishDate: '1605-01-16', price: '$14.99', coverImage: '/api/placeholder/200/300' },
+];
 
 export default function Dashboard() {
-    const [editModalOpen, setEditModalOpen] = useState(false);
-    const [bookToEdit, setBookToEdit] = useState(null);
-    const fileInputRef = useRef(null);
+  const [data, setData] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [bookToEdit, setBookToEdit] = useState<EditableBook | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
     
-    // Add this handler function with your other handlers
-    const handleEditBook = (book) => {
-        // Create a copy of the book and prepare the price value for the form
-        // (removing $ symbol and converting to number for the input field)
-        const formattedBook = {
-            ...book,
-            price: book.price.replace('$', '')
-        };
-        
-        setBookToEdit(formattedBook);
-        setEditModalOpen(true);
+  const handleEditBook = (book: Book) => {
+    const formattedBook: EditableBook = {
+      ...book,
+      price: book.price.replace('$', ''),
+      coverImageFile: null,
     };
-    
-    // Add this handler function to update the book data
-    const handleUpdateBook = (e) => {
-        e.preventDefault();
-        
-        // Format the price with $ symbol
-        const formattedPrice = `$${parseFloat(bookToEdit.price).toFixed(2)}`;
-        
-        // Create the updated book object
-        const updatedBook = {
-            ...bookToEdit,
-            price: formattedPrice
-        };
-        
-        // Update the data array
-        setData(prevData => 
-            prevData.map(book => 
-                book.id === updatedBook.id ? updatedBook : book
-            )
-        );
-        
-        // Close modal and reset state
-        setEditModalOpen(false);
-        setBookToEdit(null);
+
+    setBookToEdit(formattedBook);
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateBook = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!bookToEdit) return;
+
+    const updatedBook: Book = {
+      ...bookToEdit,
+      price: `$${parseFloat(bookToEdit.price).toFixed(2)}`,
+      coverImage: bookToEdit.coverImage || '/api/placeholder/200/300',
     };
-    
-    // Add this handler for form input changes in the edit modal
-    const handleEditInputChange = (e) => {
-        const { name, value } = e.target;
-        setBookToEdit(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-    
-    // Add this handler for image changes in the edit modal
-    const handleEditImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            // Create a URL for preview
-            const previewUrl = URL.createObjectURL(file);
-            setBookToEdit(prev => ({
-                ...prev,
-                coverImage: previewUrl,
-                coverImageFile: file // Store the actual file if needed for upload
-            }));
-            
-            // Log to verify the image change is detected
-            console.log("Image file selected:", file);
-            console.log("Preview URL created:", previewUrl);
+
+    await updateBook(updatedBook);
+    setEditModalOpen(false);
+    setBookToEdit(null);
+  };
+
+  const handleEditInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const key = name as keyof EditableBook;
+
+    setBookToEdit(prev => {
+      if (!prev) return prev;
+      return { ...prev, [key]: value } as EditableBook;
+    });
+  };
+
+  const handleEditImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !bookToEdit) return;
+
+    const previewUrl = URL.createObjectURL(file);
+    setBookToEdit(prev => {
+      if (!prev) return prev;
+      return { ...prev, coverImage: previewUrl, coverImageFile: file } as EditableBook;
+    });
+  };
+
+  const handleEditImageRemove = () => {
+    setBookToEdit(prev => {
+      if (!prev) return prev;
+      return { ...prev, coverImage: null, coverImageFile: null } as EditableBook;
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const updateBook = async (book: Book) => {
+    try {
+      const response = await fetch(`${apiBooksUrl}/${book.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(book),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update book:', response.statusText);
+      }
+
+      setData(prev => prev.map(item => (item.id === book.id ? book : item)));
+    } catch (error) {
+      console.error('Update book failed:', error);
+      setData(prev => prev.map(item => (item.id === book.id ? book : item)));
+    }
+  };
+
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        const response = await fetch(apiBooksUrl);
+        if (response.ok) {
+          const books: Book[] = await response.json();
+          setData(books);
+        } else {
+          setData(initialBooks);
         }
+      } catch (error) {
+        console.error('Fetch books failed:', error);
+        setData(initialBooks);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    
-    // Add this handler to remove the image in the edit modal
-    const handleEditImageRemove = () => {
-        setBookToEdit(prev => ({
-            ...prev,
-            coverImage: null,
-            coverImageFile: null
-        }));
-    
-        // Reset the file input so you can re-select the same file again
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
-     
-    // Sample data for books
-    const initialData = [
-        { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', genre: 'Classic', status: 'Available', publishDate: '1925-04-10', price: '$12.99', coverImage: '/images/z.jpg' },
-        { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee', genre: 'Fiction', status: 'Available', publishDate: '1960-07-11', price: '$14.99', coverImage: '/images/m.png' },
-        { id: 3, title: '1984', author: 'George Orwell', genre: 'Science Fiction', status: 'On Loan', publishDate: '1949-06-08', price: '$11.99', coverImage: '/images/w.JPG' },
-        { id: 4, title: 'Pride and Prejudice', author: 'Jane Austen', genre: 'Romance', status: 'Available', publishDate: '1813-01-28', price: '$9.99', coverImage: '/api/placeholder/200/300' },
-        { id: 5, title: 'The Hobbit', author: 'J.R.R. Tolkien', genre: 'Fantasy', status: 'Available', publishDate: '1937-09-21', price: '$13.99', coverImage: '/api/placeholder/200/300' },
-        { id: 6, title: 'The Catcher in the Rye', author: 'J.D. Salinger', genre: 'Coming-of-age', status: 'On Loan', publishDate: '1951-07-16', price: '$10.99', coverImage: '/api/placeholder/200/300' },
-        { id: 7, title: 'Brave New World', author: 'Aldous Huxley', genre: 'Science Fiction', status: 'Available', publishDate: '1932-06-01', price: '$12.49', coverImage: '/api/placeholder/200/300' },
-        { id: 8, title: 'Lord of the Flies', author: 'William Golding', genre: 'Adventure', status: 'Available', publishDate: '1954-09-17', price: '$11.49', coverImage: '/api/placeholder/200/300' },
-        { id: 9, title: 'The Alchemist', author: 'Paulo Coelho', genre: 'Fantasy', status: 'On Loan', publishDate: '1988-01-01', price: '$10.99', coverImage: '/api/placeholder/200/300' },
-        { id: 10, title: 'Moby Dick', author: 'Herman Melville', genre: 'Adventure', status: 'Available', publishDate: '1851-10-18', price: '$12.99', coverImage: '/api/placeholder/200/300' },
-        { id: 11, title: 'Wuthering Heights', author: 'Emily Brontë', genre: 'Gothic', status: 'Available', publishDate: '1847-12-19', price: '$9.99', coverImage: '/api/placeholder/200/300' },
-        { id: 12, title: 'Don Quixote', author: 'Miguel de Cervantes', genre: 'Classic', status: 'On Loan', publishDate: '1605-01-16', price: '$14.99', coverImage: '/api/placeholder/200/300' },
-    ];
-   
-    const [addModalOpen, setAddModalOpen] = useState(false);
-    const [newBook, setNewBook] = useState({
+
+    loadBooks();
+  }, []);
+
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [newBook, setNewBook] = useState<NewBookForm>({
     title: '',
     author: '',
     genre: '',
@@ -116,127 +184,115 @@ export default function Dashboard() {
     price: '',
     description: '',
     coverImage: null,
-    coverImagePreview: null
-});
-const handleInputChange = (e) => {
+    coverImagePreview: null,
+  });
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewBook(prev => ({
-        ...prev,
-        [name]: name === 'price' ? parseFloat(value) : value
-    }));
-};
+      ...prev,
+      [name]: value,
+    } as NewBookForm));
+  };
 
-const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  // Preview
-  const previewUrl = URL.createObjectURL(file);
-  setNewBook((prev) => ({
-    ...prev,
-    coverImage: file,
-    coverImagePreview: previewUrl,
-  }));
-
-  // Upload to Cloudinary
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-
-    const data = await res.json();
-
-    if (data.url) {
-      setNewBook((prev) => ({
-        ...prev,
-        coverImagePreview: data.url, // Cloudinary hosted image
-      }));
-    }
-  } catch (err) {
-    console.error('Image upload failed:', err);
-  }
-};c
-
-const handleImageRemove = () => {
+    const previewUrl = URL.createObjectURL(file);
     setNewBook(prev => ({
-        ...prev,
-        coverImage: null,
-        coverImagePreview: null
+      ...prev,
+      coverImage: file,
+      coverImagePreview: previewUrl,
     }));
-};
-const formData = new FormData();
 
-const handleAddBook = async (e: React.FormEvent) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/auth/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        setNewBook(prev => ({
+          ...prev,
+          coverImagePreview: data.url,
+        }));
+      }
+    } catch (err) {
+      console.error('Image upload failed:', err);
+    }
+  };
+
+  const handleImageRemove = () => {
+    setNewBook(prev => ({
+      ...prev,
+      coverImage: null,
+      coverImagePreview: null,
+    }));
+  };
+
+  const handleAddBook = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Generate a new ID (typically this would be handled by a backend)
-    const newId = Math.max(...data.map(book => book.id)) + 1;
-    
-    // Format the price with $ symbol
-    const formattedPrice = `$${parseFloat(newBook.price).toFixed(2)}`;
-    
-    // Create the new book object
-    const bookToAdd = {
-        id: newId,
-        title: newBook.title,
-        author: newBook.author,
-        genre: newBook.genre,
-        status: newBook.status,
-        publishDate: newBook.publishDate,
-        price: formattedPrice,
-        description: newBook.description,
-        // For demo purposes, we're using a placeholder if no image was uploaded
-        coverImage: newBook.coverImagePreview || '/api/placeholder/200/300'
+
+    const newId = data.length > 0 ? Math.max(...data.map(book => book.id)) + 1 : 1;
+    const formattedPrice = `$${parseFloat(newBook.price || '0').toFixed(2)}`;
+
+    const bookToAdd: Book = {
+      id: newId,
+      title: newBook.title,
+      author: newBook.author,
+      genre: newBook.genre,
+      status: newBook.status,
+      publishDate: newBook.publishDate,
+      price: formattedPrice,
+      description: newBook.description,
+      coverImage: newBook.coverImagePreview || '/api/placeholder/200/300',
     };
-    
-    // Add the new book to the data
+
     setData(prevData => [bookToAdd, ...prevData]);
-    
-    // Reset form and close modal
     setNewBook({
-        title: '',
-        author: '',
-        genre: '',
-        status: '',
-        publishDate: '',
-        price: '',
-        description: '',
-        coverImage: null,
-        coverImagePreview: null
+      title: '',
+      author: '',
+      genre: '',
+      status: '',
+      publishDate: '',
+      price: '',
+      description: '',
+      coverImage: null,
+      coverImagePreview: null,
     });
     setAddModalOpen(false);
-};
+  };
 
-    // State for data
-    const [data, setData] = useState(initialData);
-    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(8); // Showing 8 cards per page
-    const [selectedRows, setSelectedRows] = useState([]);
-    const [filterValue, setFilterValue] = useState('');
-    const [visibleColumns, setVisibleColumns] = useState({
-        id: true,
-        title: true,
-        author: true,
-        genre: true,
-        status: true,
-        publishDate: true,
-        price: true,
-        actions: true
-    });
-    const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'id', direction: 'asc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [filterValue, setFilterValue] = useState('');
+  const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>({
+    id: true,
+    title: true,
+    author: true,
+    genre: true,
+    status: true,
+    publishDate: true,
+    price: true,
+    actions: true,
+  });
+  const [columnMenuOpen, setColumnMenuOpen] = useState(false);
     
     // Modal states
     const [viewModalOpen, setViewModalOpen] = useState(false);
-    const [selectedBook, setSelectedBook] = useState(null);
+    const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
     // Sorting function
-    const handleSort = (key) => {
-        let direction = 'asc';
+    const handleSort = (key: SortKey) => {
+        let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
         }
@@ -245,8 +301,8 @@ const handleAddBook = async (e: React.FormEvent) => {
 
     // Filter function
     const filteredData = useMemo(() => {
+        const searchTerm = filterValue.toLowerCase();
         return data.filter(item => {
-            const searchTerm = filterValue.toLowerCase();
             return (
                 item.title.toLowerCase().includes(searchTerm) ||
                 item.author.toLowerCase().includes(searchTerm) ||
@@ -260,10 +316,13 @@ const handleAddBook = async (e: React.FormEvent) => {
     const sortedData = useMemo(() => {
         const sortableData = [...filteredData];
         sortableData.sort((a, b) => {
-            if (a[sortConfig.key] < b[sortConfig.key]) {
+            const aValue = getSortableValue(a, sortConfig.key);
+            const bValue = getSortableValue(b, sortConfig.key);
+
+            if (aValue < bValue) {
                 return sortConfig.direction === 'asc' ? -1 : 1;
             }
-            if (a[sortConfig.key] > b[sortConfig.key]) {
+            if (aValue > bValue) {
                 return sortConfig.direction === 'asc' ? 1 : -1;
             }
             return 0;
@@ -279,7 +338,7 @@ const handleAddBook = async (e: React.FormEvent) => {
     }, [sortedData, currentPage, rowsPerPage]);
 
     // Row selection handlers
-    const toggleRowSelection = (id) => {
+    const toggleRowSelection = (id: number) => {
         setSelectedRows(prev => {
             if (prev.includes(id)) {
                 return prev.filter(rowId => rowId !== id);
@@ -298,15 +357,15 @@ const handleAddBook = async (e: React.FormEvent) => {
     };
 
     // Column visibility handler
-    const toggleColumnVisibility = (column) => {
+    const toggleColumnVisibility = (column: keyof VisibleColumns) => {
         setVisibleColumns(prev => ({
             ...prev,
-            [column]: !prev[column]
+            [column]: !prev[column],
         }));
     };
 
     // Open view modal
-    const handleViewBook = (book) => {
+    const handleViewBook = (book: Book) => {
         setSelectedBook(book);
         setViewModalOpen(true);
     };
@@ -333,7 +392,7 @@ const handleAddBook = async (e: React.FormEvent) => {
                     </div>
                    
                     {editModalOpen && bookToEdit && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
             {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b">
@@ -463,7 +522,7 @@ const handleAddBook = async (e: React.FormEvent) => {
                                 name="description"
                                 value={bookToEdit.description || ''}
                                 onChange={handleEditInputChange}
-                                rows="4"
+                                rows={4}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             ></textarea>
                         </div>
@@ -532,7 +591,7 @@ const handleAddBook = async (e: React.FormEvent) => {
     </div>
 )}
                     {addModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
             {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b">
@@ -662,7 +721,7 @@ const handleAddBook = async (e: React.FormEvent) => {
                                 name="description"
                                 value={newBook.description}
                                 onChange={handleInputChange}
-                                rows="4"
+                                rows={4}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             ></textarea>
                         </div>
@@ -672,13 +731,16 @@ const handleAddBook = async (e: React.FormEvent) => {
                             <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-6">
                                 {newBook.coverImagePreview ? (
                                     <div className="relative w-40 h-56">
-                                        <Image
-                                            src={newBook.coverImagePreview}
-                                            alt="Book cover preview"
-                                            width={160}
-                                            height={224}
-                                            className="object-contain"
-                                        />
+                                       <CldImage
+                                            src={newBook.coverImagePreview} // Use this sample image or upload your own via the Media Explorer
+                                            width="500" // Transform the image: auto-crop to square aspect_ratio
+                                            height="500"
+                                            crop={{
+                                                type: 'auto',
+                                                source: true
+                                            }}
+                                            alt="Nigga"
+                                            />
                                         <button
                                             type="button"
                                             onClick={handleImageRemove}
@@ -743,7 +805,7 @@ const handleAddBook = async (e: React.FormEvent) => {
                                         value={`${sortConfig.key}-${sortConfig.direction}`}
                                         onChange={(e) => {
                                             const [key, direction] = e.target.value.split('-');
-                                            setSortConfig({ key, direction });
+                                            setSortConfig({ key: key as SortKey, direction: direction as 'asc' | 'desc' });
                                         }}
                                     >
                                         <option value="id-asc">ID (Ascending)</option>
@@ -786,7 +848,7 @@ const handleAddBook = async (e: React.FormEvent) => {
                                     
                                     {columnMenuOpen && (
                                         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
-                                            {Object.keys(visibleColumns).map(column => (
+                                            {(Object.keys(visibleColumns) as Array<keyof VisibleColumns>).map(column => (
                                                 <div 
                                                     key={column} 
                                                     className="px-4 py-2 flex items-center justify-between hover:bg-gray-100 cursor-pointer"
@@ -819,108 +881,107 @@ const handleAddBook = async (e: React.FormEvent) => {
                         </div>
                      
                         {/* Card Grid */}
-{/* Card Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {paginatedData.map((book) => (
                                 <div 
                                     key={book.id} 
-                                    className={`border rounded-lg overflow-hidden shadow-sm ${
-                                        selectedRows.includes(book.id) ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200"
-                                    }`}
+                                    className="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden border border-gray-100"
                                 >
-                                    <div className="relative">
-                                        {/* Selection checkbox */}
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedRows.includes(book.id)}
-                                            onChange={() => toggleRowSelection(book.id)}
-                                            className="absolute top-2 right-2 z-10 w-5 h-5"
-                                        />
-                                        
-                                        {/* Book cover image - fixed height container */}
-                                        <div className="flex justify-center items-center bg-gray-50 h-60">
-                                            <div className="overflow-hidden w-40 h-56 relative">
-                                                <Image 
-                                                    src={book.coverImage}
-                                                    alt={book.title}
-                                                    width={160}
-                                                    height={224}
-                                                    className="object-contain"
-                                                    style={{ maxWidth: '100%', maxHeight: '100%' }}
-                                                />
+                                    {/* Gradient overlay on hover */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    
+                                    {/* Status Badge */}
+                                    <div className="absolute top-3 right-3 z-10">
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                                            book.status === 'Available' 
+                                                ? 'bg-emerald-100 text-emerald-800' 
+                                                : 'bg-amber-100 text-amber-800'
+                                        }`}>
+                                            <span className={`w-2 h-2 rounded-full mr-2 ${book.status === 'Available' ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
+                                            {book.status}
+                                        </span>
+                                    </div>
+
+                                    {/* Selection checkbox */}
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRows.includes(book.id)}
+                                        onChange={() => toggleRowSelection(book.id)}
+                                        className="absolute top-3 left-3 z-10 w-5 h-5"
+                                    />
+
+                                    {/* Book Cover Image */}
+                                    <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden group-hover:scale-105 transition-transform duration-300 flex items-center justify-center">
+                                        {book.coverImage ? (
+                                            <Image
+                                                src={book.coverImage}
+                                                alt={book.title}
+                                                width={160}
+                                                height={224}
+                                                className="object-cover w-full h-full"
+                                            />
+                                        ) : (
+                                            <div className="text-center text-gray-400">
+                                                <span className="text-sm">No Image</span>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                     
-                                    <div className="p-4">
+                                    <div className="p-4 relative z-5">
+                                        {/* Title */}
                                         {visibleColumns.title && (
-                                            <h4 className="font-medium text-gray-900 text-lg mb-1 line-clamp-1">{book.title}</h4>
+                                            <h4 className="font-bold text-gray-900 text-base mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">{book.title}</h4>
                                         )}
                                         
+                                        {/* Author */}
                                         {visibleColumns.author && (
-                                            <p className="text-sm text-gray-600 mb-3">by {book.author}</p>
+                                            <p className="text-xs text-gray-500 mb-3 font-medium">by <span className="text-gray-700">{book.author}</span></p>
                                         )}
                                         
-                                        <div className="space-y-2 text-sm mb-3">
-                                            {visibleColumns.id && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">ID:</span>
-                                                    <span className="text-gray-900">{book.id}</span>
-                                                </div>
-                                            )}
-                                            
+                                        {/* Info Grid */}
+                                        <div className="space-y-2 text-xs mb-4 bg-gray-50 -mx-4 px-4 py-3 rounded-lg">
                                             {visibleColumns.genre && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Genre:</span>
-                                                    <span className="text-gray-900">{book.genre}</span>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500 font-medium">Genre</span>
+                                                    <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">{book.genre}</span>
                                                 </div>
                                             )}
                                             
                                             {visibleColumns.publishDate && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Published:</span>
-                                                    <span className="text-gray-900">{book.publishDate}</span>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-500 font-medium">Published</span>
+                                                    <span className="text-gray-700 font-semibold">{book.publishDate}</span>
                                                 </div>
                                             )}
                                             
                                             {visibleColumns.price && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Price:</span>
-                                                    <span className="text-gray-900 font-medium">{book.price}</span>
-                                                </div>
-                                            )}
-                                            
-                                            {visibleColumns.status && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-500">Status:</span>
-                                                    <span className={`${
-                                                        book.status === 'Available' ? 'text-green-600' : 'text-amber-600'
-                                                    } font-medium`}>
-                                                        {book.status}
-                                                    </span>
+                                                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                                                    <span className="text-gray-500 font-medium">Price</span>
+                                                    <span className="text-lg font-bold text-blue-600">{book.price}</span>
                                                 </div>
                                             )}
                                         </div>
                                         
+                                        {/* Action Buttons */}
                                         {visibleColumns.actions && (
-                                            <div className="flex justify-between border-t pt-3 mt-3">
+                                            <div className="flex gap-2 pt-3 border-t border-gray-200">
                                                 <button 
-                                                    className="flex items-center text-blue-600 hover:text-blue-800"
+                                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                                                     onClick={() => handleViewBook(book)}
                                                 >
-                                                    <Eye size={16} className="mr-1" />
-                                                    <span>View</span>
+                                                    <Eye size={14} />
+                                                    <span className="hidden sm:inline">View</span>
                                                 </button>
                                                 <button 
-                                                    className="flex items-center text-green-600 hover:text-green-800" 
+                                                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" 
                                                     onClick={() => handleEditBook(book)}
                                                 >
-                                                    <Edit size={16} className="mr-1" />
-                                                    <span>Edit</span>
+                                                    <Edit size={14} />
+                                                    <span className="hidden sm:inline">Edit</span>
                                                 </button>
-                                                <button className="flex items-center text-red-600 hover:text-red-800">
-                                                    <Trash size={16} className="mr-1" />
-                                                    <span>Delete</span>
+                                                <button className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                                                    <Trash size={14} />
+                                                    <span className="hidden sm:inline">Delete</span>
                                                 </button>
                                             </div>
                                         )}
@@ -1009,7 +1070,7 @@ const handleAddBook = async (e: React.FormEvent) => {
 
             {/* View Book Modal */}
             {viewModalOpen && selectedBook && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full overflow-hidden">
                         {/* Modal Header */}
                         <div className="flex justify-between items-center p-4 border-b">
