@@ -2,8 +2,6 @@
 
 import {
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -24,12 +22,19 @@ const data = [
   { name: 'Sun', borrowed: 72, returned: 48, active: 24 },
 ];
 
-const CustomTooltip = ({ active, payload }: any) => {
+type TooltipPayloadEntry = {
+  color: string;
+  name: string;
+  value: number;
+  payload?: { name?: string };
+};
+
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayloadEntry[] }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
         <p className="text-sm font-semibold text-gray-900">{payload[0]?.payload?.name}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }} className="text-xs">
             {entry.name}: {entry.value}
           </p>

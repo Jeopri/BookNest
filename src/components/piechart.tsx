@@ -2,16 +2,10 @@
 
 import {
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
 } from 'recharts';
 
 const pieData = [
@@ -23,7 +17,12 @@ const pieData = [
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
-const CustomTooltip = ({ active, payload }: any) => {
+type TooltipPayloadEntry = {
+  value: number;
+  payload?: { name?: string; percentage?: number };
+};
+
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayloadEntry[] }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
@@ -42,8 +41,8 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export default function Piechart() {
   return (
-    <div className="w-full h-full">
-      <div className="flex items-center justify-center h-full">
+    <div className="w-full">
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -54,7 +53,6 @@ export default function Piechart() {
               cy="50%"
               outerRadius={90}
               innerRadius={45}
-              label={({ name, percentage }) => `${name} ${percentage}%`}
               labelLine={false}
               paddingAngle={2}
             >
@@ -63,26 +61,20 @@ export default function Piechart() {
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              verticalAlign="bottom" 
-              height={36}
-              wrapperStyle={{ paddingTop: '20px' }}
-            />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Stats Below Chart */}
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3">
         {pieData.map((item, index) => (
-          <div key={item.name} className="flex items-center gap-2">
+          <div key={item.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
             <div
-              className="w-3 h-3 rounded-full"
+              className="w-3 h-3 rounded-full shrink-0"
               style={{ backgroundColor: COLORS[index] }}
             ></div>
-            <div className="text-xs">
-              <p className="font-semibold text-gray-900">{item.name}</p>
-              <p className="text-gray-500">{item.value} books</p>
+            <div className="text-xs min-w-0">
+              <p className="font-semibold text-gray-900 truncate">{item.name}</p>
+              <p className="text-gray-500">{item.value} books ({item.percentage}%)</p>
             </div>
           </div>
         ))}

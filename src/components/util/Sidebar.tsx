@@ -1,28 +1,50 @@
 'use client';
 
-import { ChevronRight, LogOut, Menu, SquareKanban, User, X, BookOpenText, Library, ClipboardCheck, BookOpenCheck, Book  } from 'lucide-react';
+import { ChevronRight, LogOut, Menu, SquareKanban, User, X, BookOpenText, Library, ClipboardCheck, BookOpenCheck, BarChart3, Sparkles, Calendar  } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useSidebar } from '@/context/SidebarContext';
+
+const STORAGE_KEY = 'sidebar_user';
+
+function loadCachedUser(): { firstname: string; lastname: string; email: string } | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedUser(user: { firstname: string; lastname: string; email: string }) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  } catch { }
+}
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar();
+  const [user, setUser] = useState<{ firstname: string; lastname: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
 
   const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/');
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const cached = loadCachedUser();
+    if (cached) {
+      setUser(cached);
+      setLoading(false);
+      return;
+    }
+    (async () => {
       try {
         const res = await fetch('/api/auth/user');
         if (res.ok) {
           const data = await res.json();
+          saveCachedUser(data.user);
           setUser(data.user);
         } else {
           console.error('Failed to load sidebar user:', res.status, await res.text());
@@ -32,8 +54,7 @@ export default function Sidebar() {
       } finally {
         setLoading(false);
       }
-    };
-    fetchUser();
+    })();
   }, []);
 
   const handleLogout = async () => {
@@ -81,15 +102,15 @@ export default function Sidebar() {
           {[
             { name: 'Dashboard', href: '/dashboard', icon: <SquareKanban size={20} /> },
             { name: 'Books', href: '/listing', icon: <Library size={20} /> },
-            { name: 'Borrow Books', href: '/borrow', icon: <SquareKanban size={20} /> },
+            { name: 'Borrow Books', href: '/borrow', icon: <BookOpenText size={20} /> },
             { name: 'Return Books', href: '/return', icon: <BookOpenCheck size={20} /> },
             { name: 'Overdue', href: '/overdue', icon: <ClipboardCheck size={20} /> },
-            { name: 'Reservations', href: '/reservations', icon: <SquareKanban size={20} /> },
-            { name: 'Reports / Analytics', href: '/reports', icon: <SquareKanban size={20} /> },
-            { name: 'AI Recommendations', href: '/recommendations', icon: <SquareKanban size={20} /> },
+            { name: 'Reservations', href: '/reservations', icon: <Calendar size={20} /> },
+            { name: 'Reports / Analytics', href: '/reports', icon: <BarChart3 size={20} /> },
+            { name: 'AI Recommendations', href: '/recommendations', icon: <Sparkles size={20} /> },
           ].map((item, index) => (
             <li key={index}>
-              <a
+              <Link
                 href={item.href || "#"}
                 className={`flex items-center p-3 transition ${
                   isActive(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
@@ -97,7 +118,7 @@ export default function Sidebar() {
               >
                 <span className="mr-2">{item.icon}</span>
                 {sidebarOpen && <span className="text-sm">{item.name}</span>}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -112,7 +133,7 @@ export default function Sidebar() {
             { name: 'Profile', href: '/profile', icon: <User size={20} /> },
           ].map((item, index) => (
             <li key={`user-${index}`}>
-              <a
+              <Link
                 href={item.href || "#"}
                 className={`flex items-center p-3 transition ${
                   isActive(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
@@ -120,7 +141,7 @@ export default function Sidebar() {
               >
                 <span className="mr-2">{item.icon}</span>
                 {sidebarOpen && <span className="text-sm">{item.name}</span>}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -134,7 +155,7 @@ export default function Sidebar() {
             { name: 'System Logs', href: '/logs/system', icon: <ChevronRight size={20} /> },
           ].map((item, index) => (
             <li key={`log-${index}`}>
-              <a
+              <Link
                 href={item.href || "#"}
                 className={`flex items-center p-3 transition ${
                   isActive(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700'
@@ -142,7 +163,7 @@ export default function Sidebar() {
               >
                 <span className="mr-2">{item.icon}</span>
                 {sidebarOpen && <span className="text-sm">{item.name}</span>}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
