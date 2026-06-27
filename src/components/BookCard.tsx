@@ -2,6 +2,13 @@
 import { Eye, Edit, Trash } from 'lucide-react';
 import Image from 'next/image';
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('T')[0].split('-');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[parseInt(m) - 1]} ${parseInt(d)}, ${y}`;
+}
+
 export type Book = {
   _id: string;
   title: string;
@@ -9,7 +16,7 @@ export type Book = {
   genre: string;
   status: string;
   publishDate: string;
-  price: string;
+  price: number;
   coverImage: string;
   description?: string;
 };
@@ -91,14 +98,14 @@ export default function BookCard({
           {visibleColumns.publishDate && (
             <div className="flex justify-between items-center">
               <span className="text-gray-500 font-medium">Published</span>
-              <span className="text-gray-700 font-semibold">{book.publishDate}</span>
+              <span className="text-gray-700 font-semibold">{formatDate(book.publishDate)}</span>
             </div>
           )}
 
           {visibleColumns.price && (
             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
               <span className="text-gray-500 font-medium">Price</span>
-              <span className="text-lg font-bold text-blue-600">{book.price}</span>
+              <span className="text-lg font-bold text-blue-600">${book.price.toFixed(2)}</span>
             </div>
           )}
         </div>

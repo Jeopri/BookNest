@@ -102,6 +102,7 @@ export default function Home() {
                     id="remember"
                     type="checkbox"
                     className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:focus:ring-slate-500"
+                    required
                   />
                   Remember me
                 </label>

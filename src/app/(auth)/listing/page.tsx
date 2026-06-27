@@ -5,6 +5,13 @@ import { CldImage } from 'next-cloudinary';
 import Image from 'next/image';
 import { useMemo, useRef, useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('T')[0].split('-');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[parseInt(m) - 1]} ${parseInt(d)}, ${y}`;
+}
+
 type SortKey = 'title' | 'author' | 'genre' | 'status' | 'publishDate' | 'price';
 type SortConfig = { key: SortKey; direction: 'asc' | 'desc' };
 
@@ -25,7 +32,7 @@ type EditableBook = Omit<Book, 'coverImage'> & { coverImage: string | null; cove
 type VisibleColumns = Record<'id' | 'title' | 'author' | 'genre' | 'status' | 'publishDate' | 'price' | 'actions', boolean>;
 
 function getSortableValue(book: Book, key: SortKey): string | number {
-  if (key === 'price') return parseFloat(book.price.replace(/^[^0-9.-]+/, '')) || 0;
+  if (key === 'price') return book.price;
   return book[key].toString().toLowerCase();
 }
 
@@ -39,12 +46,13 @@ async function uploadImage(file: File): Promise<string> {
 
 export default function ListingPage() {
   const [data, setData] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [bookToEdit, setBookToEdit] = useState<EditableBook | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleEditBook = (book: Book) => {
-    setBookToEdit({ ...book, price: book.price.replace('$', ''), coverImageFile: null });
+    setBookToEdit({ ...book, coverImageFile: null });
     setEditModalOpen(true);
   };
 
@@ -57,12 +65,12 @@ export default function ListingPage() {
       coverImage = await uploadImage(bookToEdit.coverImageFile);
     }
 
-    const updatedBook: Partial<Book> & { price?: string } = {
+    const updatedBook: Partial<Book> = {
       title: bookToEdit.title,
       author: bookToEdit.author,
       genre: bookToEdit.genre,
       publishDate: bookToEdit.publishDate,
-      price: `$${parseFloat(bookToEdit.price).toFixed(2)}`,
+      price: Number(bookToEdit.price) || 0,
       status: bookToEdit.status,
       description: bookToEdit.description || '',
       coverImage: coverImage || '/api/placeholder/200/300',
@@ -119,6 +127,8 @@ export default function ListingPage() {
         if (res.ok) setData(await res.json());
       } catch (err) {
         console.error('Fetch books failed:', err);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -268,7 +278,7 @@ export default function ListingPage() {
                   </div>
                   <div className="mb-4">
                     <label htmlFor="edit-publishDate" className="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
-                    <input type="date" id="edit-publishDate" name="publishDate" value={bookToEdit.publishDate} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="date" id="edit-publishDate" name="publishDate" value={bookToEdit.publishDate.split('T')[0]} onChange={handleEditInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                   </div>
                   <div className="mb-4">
                     <label htmlFor="edit-price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
@@ -455,7 +465,20 @@ export default function ListingPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {paginatedData.map(book => (
+          {loading ? Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+              <div className="h-48 bg-gray-200" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                <div className="h-3 bg-gray-200 rounded w-1/3" />
+                <div className="flex justify-between pt-2">
+                  <div className="h-6 bg-gray-200 rounded w-16" />
+                  <div className="h-6 bg-gray-200 rounded w-14" />
+                </div>
+              </div>
+            </div>
+          )) : paginatedData.map(book => (
             <BookCard
               key={book._id}
               book={book}
@@ -469,7 +492,7 @@ export default function ListingPage() {
           ))}
         </div>
 
-        {paginatedData.length === 0 && (
+        {!loading && paginatedData.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-2">No books found</p>
             <p className="text-gray-400">Try adjusting your search or add a new book</p>
@@ -527,8 +550,8 @@ export default function ListingPage() {
                 <p className="text-lg text-gray-600 mb-6">by {selectedBook.author}</p>
                 <div className="grid grid-cols-1 gap-4 text-gray-700">
                   <div className="flex justify-between border-b pb-2"><span className="font-medium">Genre:</span><span>{selectedBook.genre}</span></div>
-                  <div className="flex justify-between border-b pb-2"><span className="font-medium">Publication Date:</span><span>{selectedBook.publishDate}</span></div>
-                  <div className="flex justify-between border-b pb-2"><span className="font-medium">Price:</span><span className="font-semibold">{selectedBook.price}</span></div>
+                  <div className="flex justify-between border-b pb-2"><span className="font-medium">Publication Date:</span><span>{formatDate(selectedBook.publishDate)}</span></div>
+                  <div className="flex justify-between border-b pb-2"><span className="font-medium">Price:</span><span className="font-semibold">${Number(selectedBook.price).toFixed(2)}</span></div>
                   <div className="flex justify-between border-b pb-2">
                     <span className="font-medium">Status:</span>
                     <span className={`font-semibold ${selectedBook.status === 'Available' ? 'text-green-600' : 'text-amber-600'}`}>{selectedBook.status}</span>
