@@ -12,15 +12,12 @@ import {
   ReferenceLine,
 } from 'recharts';
 
-const data = [
-  { name: 'Mon', borrowed: 45, returned: 28, active: 17 },
-  { name: 'Tue', borrowed: 52, returned: 35, active: 17 },
-  { name: 'Wed', borrowed: 48, returned: 32, active: 16 },
-  { name: 'Thu', borrowed: 61, returned: 40, active: 21 },
-  { name: 'Fri', borrowed: 55, returned: 38, active: 17 },
-  { name: 'Sat', borrowed: 67, returned: 42, active: 25 },
-  { name: 'Sun', borrowed: 72, returned: 48, active: 24 },
-];
+type DataPoint = {
+  name: string;
+  borrowed: number;
+  returned: number;
+  active: number;
+};
 
 type TooltipPayloadEntry = {
   color: string;
@@ -45,7 +42,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Toolti
   return null;
 };
 
-export default function Linechart() {
+export default function Linechart({ data }: { data: DataPoint[] }) {
   return (
     <div className="w-full h-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -66,10 +63,10 @@ export default function Linechart() {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis dataKey="name" stroke="#9ca3af" />
-          <YAxis stroke="#9ca3af" />
+          <YAxis stroke="#9ca3af" allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ paddingTop: '20px' }} />
-          <ReferenceLine y={50} stroke="#f3f4f6" strokeDasharray="3 3" />
+          <ReferenceLine y={0} stroke="#f3f4f6" strokeDasharray="3 3" />
           <Area
             type="monotone"
             dataKey="borrowed"

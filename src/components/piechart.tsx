@@ -8,14 +8,13 @@ import {
   Tooltip,
 } from 'recharts';
 
-const pieData = [
-  { name: 'Fiction', value: 320, percentage: 35 },
-  { name: 'Non-Fiction', value: 280, percentage: 30 },
-  { name: 'Science', value: 190, percentage: 20 },
-  { name: 'Biography', value: 160, percentage: 15 },
-];
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+type DataPoint = {
+  name: string;
+  value: number;
+  percentage: number;
+};
 
 type TooltipPayloadEntry = {
   value: number;
@@ -39,14 +38,14 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Toolti
   return null;
 };
 
-export default function Piechart() {
+export default function Piechart({ data }: { data: DataPoint[] }) {
   return (
     <div className="w-full">
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={pieData}
+              data={data}
               dataKey="value"
               nameKey="name"
               cx="50%"
@@ -56,7 +55,7 @@ export default function Piechart() {
               labelLine={false}
               paddingAngle={2}
             >
-              {pieData.map((entry, index) => (
+              {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -66,7 +65,7 @@ export default function Piechart() {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        {pieData.map((item, index) => (
+        {data.map((item, index) => (
           <div key={item.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
             <div
               className="w-3 h-3 rounded-full shrink-0"

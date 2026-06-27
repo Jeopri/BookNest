@@ -2,39 +2,96 @@
 import Linechart from '@/components/linechart';
 import Piechart from '@/components/piechart';
 import MetricCard from '@/components/MetricCard';
-import { TrendingUp, BookOpen, Users, AlertCircle } from 'lucide-react';
+import { TrendingUp, BookOpen, Users, AlertCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-type UserData = {
+type DashboardStats = {
   totalUsers: number;
+  totalBooks: number;
+  borrowedBooks: number;
+  overdueItems: number;
+  prevTotalBooks: number;
+  prevBorrowedBooks: number;
+  prevOverdueItems: number;
+  genreDistribution: { name: string; value: number; percentage: number }[];
+  activityData: { name: string; borrowed: number; returned: number; active: number }[];
 };
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    (async () => {
       try {
-        const res = await fetch('/api/auth/user');
-        if (res.ok) {
-          setUser(await res.json());
-        } else {
-          console.error('Failed to load user:', res.status);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
+        const res = await fetch('/api/dashboard/stats');
+        if (res.ok) setStats(await res.json());
+      } catch (err) {
+        console.error('Failed to load dashboard stats:', err);
+      } finally {
+        setLoading(false);
       }
-    };
-    fetchUser();
-    const interval = setInterval(fetchUser, 10000);
-    return () => clearInterval(interval);
+    })();
   }, []);
 
+  const calcPercentage = (current: number, prev: number) =>
+    prev > 0 ? Math.round(((current - prev) / prev) * 100) : 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 size={36} className="animate-spin text-blue-500" />
+        <span className="ml-3 text-gray-500 text-sm">Loading dashboard...</span>
+      </div>
+    );
+  }
+
+  const totalBooks = stats?.totalBooks ?? 0;
+  const borrowedBooks = stats?.borrowedBooks ?? 0;
+  const overdueItems = stats?.overdueItems ?? 0;
+  const totalUsers = stats?.totalUsers ?? 0;
+
   const cards = [
-    { title: 'Total Users', icon: <Users className="w-6 h-6" />, value: user?.totalUsers ?? '0', previousValue: 156, description: 'Active users', bgGradient: 'from-blue-600 to-cyan-600', isPositive: true, percentage: 12 },
-    { title: 'Total Books', icon: <BookOpen className="w-6 h-6" />, value: '1,250', previousValue: 1156, description: 'Books in inventory', bgGradient: 'from-emerald-600 to-green-600', isPositive: true, percentage: 8 },
-    { title: 'Borrowed Books', icon: <TrendingUp className="w-6 h-6" />, value: '342', previousValue: 325, description: 'Currently borrowed', bgGradient: 'from-amber-600 to-orange-600', isPositive: true, percentage: 5 },
-    { title: 'Overdue Items', icon: <AlertCircle className="w-6 h-6" />, value: '23', previousValue: 25, description: 'Books overdue', bgGradient: 'from-red-600 to-pink-600', isPositive: false, percentage: 3 },
+    {
+      title: 'Total Users',
+      icon: <Users className="w-6 h-6" />,
+      value: totalUsers.toLocaleString(),
+      previousValue: stats?.totalUsers ?? 0,
+      description: 'Registered users',
+      bgGradient: 'from-blue-600 to-cyan-600',
+      isPositive: true,
+      percentage: 0,
+    },
+    {
+      title: 'Total Books',
+      icon: <BookOpen className="w-6 h-6" />,
+      value: totalBooks.toLocaleString(),
+      previousValue: stats?.prevTotalBooks ?? totalBooks,
+      description: 'Books in inventory',
+      bgGradient: 'from-emerald-600 to-green-600',
+      isPositive: totalBooks >= (stats?.prevTotalBooks ?? totalBooks),
+      percentage: calcPercentage(totalBooks, stats?.prevTotalBooks ?? totalBooks),
+    },
+    {
+      title: 'Borrowed Books',
+      icon: <TrendingUp className="w-6 h-6" />,
+      value: borrowedBooks.toLocaleString(),
+      previousValue: stats?.prevBorrowedBooks ?? borrowedBooks,
+      description: 'Currently on loan',
+      bgGradient: 'from-amber-600 to-orange-600',
+      isPositive: true,
+      percentage: calcPercentage(borrowedBooks, stats?.prevBorrowedBooks ?? borrowedBooks),
+    },
+    {
+      title: 'Overdue Items',
+      icon: <AlertCircle className="w-6 h-6" />,
+      value: overdueItems.toLocaleString(),
+      previousValue: stats?.prevOverdueItems ?? overdueItems,
+      description: 'Books past due date',
+      bgGradient: 'from-red-600 to-pink-600',
+      isPositive: overdueItems <= (stats?.prevOverdueItems ?? overdueItems),
+      percentage: calcPercentage(overdueItems, stats?.prevOverdueItems ?? overdueItems),
+    },
   ];
 
   return (
@@ -52,20 +109,20 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200">
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-900">Activity Trend</h3>
-            <p className="text-sm text-gray-500 mt-1">Daily activity over the last 30 days</p>
+            <p className="text-sm text-gray-500 mt-1">Daily activity over the last 7 days</p>
           </div>
           <div className="h-80">
-            <Linechart />
+            <Linechart data={stats?.activityData ?? []} />
           </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200">
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-900">Book Distribution</h3>
-            <p className="text-sm text-gray-500 mt-1">Category breakdown</p>
+            <p className="text-sm text-gray-500 mt-1">Genre breakdown</p>
           </div>
           <div className="min-h-[350px]">
-            <Piechart />
+            <Piechart data={stats?.genreDistribution ?? []} />
           </div>
         </div>
       </div>
