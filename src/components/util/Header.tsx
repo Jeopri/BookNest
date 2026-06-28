@@ -13,12 +13,22 @@ type NotificationItem = {
   createdAt: string;
 };
 
+type HeaderUser = {
+  firstname: string;
+  lastname: string;
+  email: string;
+  image?: string;
+};
+
 export default function Header() {
   const { toggle } = useSidebar();
-  const [open, setOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<HeaderUser | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -38,8 +48,21 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/user');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -67,8 +90,8 @@ export default function Header() {
           <h2 className="text-lg font-semibold text-gray-800">Book Inventory</h2>
         </div>
         <div className="flex items-center space-x-4">
-          <div ref={ref} className="relative">
-            <button onClick={() => setOpen(o => !o)} className="p-1 rounded-md text-gray-500 hover:bg-gray-100 relative">
+          <div ref={notifRef} className="relative">
+            <button onClick={() => setNotifOpen(o => !o)} className="p-1 rounded-md text-gray-500 hover:bg-gray-100 relative">
               <Bell size={20} />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
@@ -77,11 +100,11 @@ export default function Header() {
               )}
             </button>
 
-            {open && (
+            {notifOpen && (
               <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-xl z-50">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <span className="font-semibold text-sm text-gray-800">Notifications</span>
-                  <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setNotifOpen(false)} className="text-gray-400 hover:text-gray-600">
                     <X size={16} />
                   </button>
                 </div>
@@ -110,7 +133,33 @@ export default function Header() {
               </div>
             )}
           </div>
-          <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+          <div ref={userMenuRef} className="relative">
+            <button onClick={() => setUserMenuOpen(o => !o)} className="flex items-center gap-2 focus:outline-none">
+              {user?.image ? (
+                <img src={user.image} alt="" className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-400 transition" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-200 cursor-pointer hover:ring-2 hover:ring-blue-400 transition" />
+              )}
+            </button>
+
+            {userMenuOpen && user && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-xl z-50">
+                <div className="px-4 py-3 border-b">
+                  <p className="text-sm font-semibold text-gray-900">{user.firstname} {user.lastname}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
+                </div>
+                <div className="px-4 py-2">
+                  <span className={`inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${
+                    user.role === 'admin' ? 'bg-red-100 text-red-700' :
+                    user.role === 'staff' ? 'bg-blue-100 text-blue-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {user.role}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

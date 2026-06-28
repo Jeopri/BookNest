@@ -32,6 +32,7 @@ export async function POST(request: Request){
                 lastname,
                 email,
                 password: hashedPassword,
+                role: 'customer',
                 createdAt: new Date(),
                 updatedAt: new Date()
             })

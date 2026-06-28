@@ -27,7 +27,14 @@ export async function GET(req: Request) {
     // Count all users
     const totalUsers = await User.countDocuments();
     return NextResponse.json({
-      user,
+      user: {
+        _id: user._id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+      },
       totalUsers,
     });
   } catch (error) {

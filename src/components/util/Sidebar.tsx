@@ -9,7 +9,9 @@ import { useSidebar } from '@/context/SidebarContext';
 
 const STORAGE_KEY = 'sidebar_user';
 
-function loadCachedUser(): { firstname: string; lastname: string; email: string } | null {
+type SidebarUser = { firstname: string; lastname: string; email: string; role: string; image?: string };
+
+function loadCachedUser(): SidebarUser | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -18,7 +20,7 @@ function loadCachedUser(): { firstname: string; lastname: string; email: string 
   }
 }
 
-function saveCachedUser(user: { firstname: string; lastname: string; email: string }) {
+function saveCachedUser(user: SidebarUser) {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   } catch { }
@@ -27,18 +29,13 @@ function saveCachedUser(user: { firstname: string; lastname: string; email: stri
 export default function Sidebar() {
   const pathname = usePathname();
   const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar();
-  const [user, setUser] = useState<{ firstname: string; lastname: string; email: string } | null>(null);
+  const [user, setUser] = useState<SidebarUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/');
 
   useEffect(() => {
     const cached = loadCachedUser();
-    if (cached) {
-      setUser(cached);
-      setLoading(false);
-      return;
-    }
     (async () => {
       try {
         const res = await fetch('/api/auth/user');
@@ -47,10 +44,12 @@ export default function Sidebar() {
           saveCachedUser(data.user);
           setUser(data.user);
         } else {
-          console.error('Failed to load sidebar user:', res.status, await res.text());
+          sessionStorage.removeItem(STORAGE_KEY);
+          setUser(null);
         }
       } catch (error) {
         console.error('Sidebar fetch failed:', error);
+        if (cached) setUser(cached);
       } finally {
         setLoading(false);
       }
@@ -128,8 +127,7 @@ export default function Sidebar() {
         </div>
         <ul className="space-y-1">
           {[
-            { name: 'Users', href: '/users', icon: <User size={20} /> },
-            { name: 'Roles & Permissions', href: '/roles', icon: <User size={20} /> },
+            ...(user.role === 'admin' ? [{ name: 'Users', href: '/users', icon: <User size={20} /> }] : []),
             { name: 'Profile', href: '/profile', icon: <User size={20} /> },
           ].map((item, index) => (
             <li key={`user-${index}`}>
@@ -175,12 +173,23 @@ export default function Sidebar() {
       
       {/* User info */}
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gray-500"></div>
+        {user.image ? (
+          <img src={user.image} alt="" className="w-8 h-8 rounded-full object-cover" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-500" />
+        )}
         <div>
           <p className="text-sm font-semibold">
             {user.firstname} {user.lastname}
           </p>
           <p className="text-xs text-gray-400">{user.email}</p>
+          <span className={`inline-block text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded mt-0.5 ${
+            user.role === 'admin' ? 'bg-red-500 text-white' :
+            user.role === 'staff' ? 'bg-blue-500 text-white' :
+            'bg-green-500 text-white'
+          }`}>
+            {user.role}
+          </span>
         </div>
       </div>
 

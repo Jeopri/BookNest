@@ -54,6 +54,8 @@ export default function BorrowPage() {
   const [formData, setFormData] = useState({ borrowerName: '', borrowerEmail: '', dueDate: '' });
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [timelinePage, setTimelinePage] = useState(1);
+  const timelineRowsPerPage = 10;
 
   useEffect(() => {
     (async () => {
@@ -294,62 +296,121 @@ export default function BorrowPage() {
 
       <div className="bg-white rounded-lg shadow text-black p-6">
         <h3 className="font-bold text-lg text-gray-700 mb-6">Activity Timeline ({timelineEvents.length})</h3>
-        <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
-          <div className="space-y-0">
-            {timelineEvents.map((event, idx) => {
-              const isLast = idx === timelineEvents.length - 1;
-              const dotColor = event.type === 'borrowed' ? 'bg-blue-500' : event.type === 'returned' ? 'bg-green-500' : 'bg-red-500';
-              const label = event.type === 'borrowed' ? 'Borrowed' : event.type === 'returned' ? 'Returned' : 'Overdue';
 
-              return (
-                <div key={event.id} className="relative flex gap-6 pb-6">
-                  {!isLast && <div className="absolute left-4 top-4 bottom-0 w-0.5 bg-gray-200" />}
-                  <div className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-full ${dotColor} flex items-center justify-center`}>
-                    {event.type === 'borrowed' ? (
-                      <BookOpen size={14} className="text-white" />
-                    ) : event.type === 'returned' ? (
-                      <BookMarked size={14} className="text-white" />
-                    ) : (
-                      <BookX size={14} className="text-white" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 min-w-0">
-                        {event.record.bookCoverImage && (
-                          <Image src={event.record.bookCoverImage} alt={event.record.bookTitle} width={36} height={48} className="object-cover rounded flex-shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold text-gray-900 text-sm">{event.record.bookTitle}</p>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              event.type === 'borrowed' ? 'bg-blue-100 text-blue-700' : event.type === 'returned' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                            }`}>{label}</span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-0.5">by {event.record.bookAuthor}</p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
-                            <span className="flex items-center gap-1"><User size={12} />{event.record.borrowerName}</span>
-                            <span className="flex items-center gap-1"><Calendar size={12} />{formatDate(event.date.toISOString())}</span>
-                            {event.type === 'borrowed' && (
-                              <span className="flex items-center gap-1 text-amber-600">Due {formatDate(event.record.dueDate)}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {timelineEvents.length === 0 && (
+        {timelineEvents.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <BookOpen size={48} className="mx-auto mb-3 text-gray-300" />
             <p>No activity yet</p>
           </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-gray-200 text-gray-500 uppercase text-xs tracking-wider">
+                    <th className="pb-3 font-medium">Event</th>
+                    <th className="pb-3 font-medium">Book</th>
+                    <th className="pb-3 font-medium">Borrower</th>
+                    <th className="pb-3 font-medium">Date</th>
+                    <th className="pb-3 font-medium">Due Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(timelineEvents.length > 0 ? timelineEvents.slice(
+                    (timelinePage - 1) * timelineRowsPerPage,
+                    timelinePage * timelineRowsPerPage
+                  ) : []).map(event => {
+                    const label = event.type === 'borrowed' ? 'Borrowed' : event.type === 'returned' ? 'Returned' : 'Overdue';
+                    return (
+                      <tr key={event.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                              event.type === 'borrowed' ? 'bg-blue-500' : event.type === 'returned' ? 'bg-green-500' : 'bg-red-500'
+                            }`}>
+                              {event.type === 'borrowed' ? (
+                                <BookOpen size={12} className="text-white" />
+                              ) : event.type === 'returned' ? (
+                                <BookMarked size={12} className="text-white" />
+                              ) : (
+                                <BookX size={12} className="text-white" />
+                              )}
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              event.type === 'borrowed' ? 'bg-blue-100 text-blue-700' : event.type === 'returned' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>{label}</span>
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            {event.record.bookCoverImage && (
+                              <Image src={event.record.bookCoverImage} alt="" width={24} height={32} className="object-cover rounded" />
+                            )}
+                            <div>
+                              <p className="font-medium text-gray-900 text-sm">{event.record.bookTitle}</p>
+                              <p className="text-xs text-gray-500">by {event.record.bookAuthor}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <User size={13} />
+                            <span>{event.record.borrowerName}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 text-gray-600">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar size={13} />
+                            {formatDate(event.date.toISOString())}
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          {event.type === 'borrowed' ? (
+                            <span className="text-amber-600 text-xs font-medium">{formatDate(event.record.dueDate)}</span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-sm text-gray-500">
+                Showing {(timelinePage - 1) * timelineRowsPerPage + 1} to {Math.min(timelinePage * timelineRowsPerPage, timelineEvents.length)} of {timelineEvents.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setTimelinePage(p => Math.max(p - 1, 1))}
+                  disabled={timelinePage === 1}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.ceil(timelineEvents.length / timelineRowsPerPage) }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setTimelinePage(page)}
+                    className={`px-3 py-1.5 text-sm border rounded-md ${
+                      timelinePage === page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setTimelinePage(p => Math.min(p + 1, Math.ceil(timelineEvents.length / timelineRowsPerPage)))}
+                  disabled={timelinePage === Math.ceil(timelineEvents.length / timelineRowsPerPage)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </>

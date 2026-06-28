@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useDeviceInfo } from '@/hook/useDevice';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<{ firstname: string; lastname: string; email: string; createdAt: string } | null>(null);
+  const [user, setUser] = useState<{ firstname: string; lastname: string; email: string; role: string; createdAt: string } | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -70,8 +70,14 @@ export default function ProfilePage() {
                   <div className="mb-4">
                     <div className="flex items-center mb-2">
                       <h3 className="text-lg font-bold">{userData.fullName}</h3>
-                      {userData.isVerified && (
-                        <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">Admin</span>
+                      {user?.role && (
+                        <span className={`ml-2 text-xs font-medium px-2 py-0.5 rounded ${
+                          user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                          user.role === 'staff' ? 'bg-blue-100 text-blue-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </span>
                       )}
                     </div>
                     <div className="text-sm text-gray-500">
