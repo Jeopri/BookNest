@@ -9,7 +9,7 @@ import { useSidebar } from '@/context/SidebarContext';
 
 const STORAGE_KEY = 'sidebar_user';
 
-type SidebarUser = { firstname: string; lastname: string; email: string; role: string; image?: string };
+type SidebarUser = { firstname: string; lastname: string; email: string; role: string; image?: string; active?: boolean; lastActive?: string };
 
 function loadCachedUser(): SidebarUser | null {
   try {
@@ -183,13 +183,16 @@ export default function Sidebar() {
             {user.firstname} {user.lastname}
           </p>
           <p className="text-xs text-gray-400">{user.email}</p>
-          <span className={`inline-block text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded mt-0.5 ${
-            user.role === 'admin' ? 'bg-red-500 text-white' :
-            user.role === 'staff' ? 'bg-blue-500 text-white' :
-            'bg-green-500 text-white'
-          }`}>
-            {user.role}
-          </span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className={`w-2 h-2 rounded-full ${user.active ? 'bg-green-400' : 'bg-red-400'}`} title={user.active ? 'Active now' : 'Offline'} />
+            <span className={`inline-block text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${
+              user.role === 'admin' ? 'bg-red-500 text-white' :
+              user.role === 'staff' ? 'bg-blue-500 text-white' :
+              'bg-green-500 text-white'
+            }`}>
+              {user.role}
+            </span>
+          </div>
         </div>
       </div>
 

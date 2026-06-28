@@ -8,6 +8,8 @@ type User = {
   lastname: string;
   email: string;
   role: 'admin' | 'customer' | 'staff';
+  active: boolean;
+  lastActive?: string;
   createdAt: string;
 };
 
@@ -123,6 +125,7 @@ export default function UsersPage() {
                   <th className="pb-3 font-medium">Name</th>
                   <th className="pb-3 font-medium">Email</th>
                   <th className="pb-3 font-medium">Role</th>
+                  <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Joined</th>
                   <th className="pb-3 font-medium">Actions</th>
                 </tr>
@@ -142,6 +145,12 @@ export default function UsersPage() {
                       }`}>
                         {u.role}
                       </span>
+                    </td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${u.active ? 'bg-green-500' : 'bg-red-400'}`} title={u.active ? 'Active now' : 'Offline'} />
+                        <span className="text-xs text-gray-500">{u.active ? 'Active' : 'Offline'}</span>
+                      </div>
                     </td>
                     <td className="py-3 text-gray-500">
                       {new Date(u.createdAt).toLocaleDateString('en-US', {
@@ -170,7 +179,7 @@ export default function UsersPage() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-gray-400">No users found</td>
+                    <td colSpan={6} className="py-12 text-center text-gray-400">No users found</td>
                   </tr>
                 )}
               </tbody>

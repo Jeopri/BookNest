@@ -8,7 +8,8 @@ A Next.js book inventory management system with dashboard analytics, full CRUD o
 - **Book Inventory** — add, edit, view, and delete books with search, sort, filter, and pagination
 - **Borrow Books** — browse books grouped by status (Available, On Loan, Reserved, Out of Stock); borrow with one click; paginated activity data table showing all borrow/return/overdue events
 - **User Roles** — Admin, Staff, and Customer roles; role badge displayed in sidebar and header; role-based UI (e.g. Users page visible to admins only)
-- **User Management** — admin-only Users page with table of all registered users, search, role update modal, delete confirmation, and create user form
+- **User Management** — admin-only Users page with table of all registered users, search, role update modal, delete confirmation, create user form, and live active/offline status indicator
+- **Active Status** — users are marked active when browsing the site (green dot) or inactive/offline (red dot); visible in the sidebar, header dropdown, and Users page; hover for tooltip
 - **Email Notifications** — automated confirmation emails sent via SMTP when a book is borrowed
 - **In-App Notifications** — bell icon in header with live unread count; dropdown shows latest notifications; marks as read on click
 - **Google OAuth** — sign in / sign up with Google; auto-creates account with Customer role on first login; profile avatar synced from Google

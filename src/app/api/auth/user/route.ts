@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 
 
-export async function GET(req: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.email) {
     return NextResponse.json(
@@ -15,9 +15,11 @@ export async function GET(req: Request) {
   }
   try {
     await connectToDatabase();
-    const user = await User.findOne({
-      email: session.user.email,
-    }).select("-password");
+    const user = await User.findOneAndUpdate(
+      { email: session.user.email },
+      { active: true, lastActive: new Date() },
+      { new: true }
+    ).select("-password");
     if (!user) {
       return NextResponse.json(
         { error: "User not found" },
@@ -34,6 +36,8 @@ export async function GET(req: Request) {
         email: user.email,
         role: user.role,
         image: user.image,
+        active: user.active,
+        lastActive: user.lastActive,
       },
       totalUsers,
     });

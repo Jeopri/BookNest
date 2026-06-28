@@ -18,6 +18,8 @@ type HeaderUser = {
   lastname: string;
   email: string;
   image?: string;
+  role?: string;
+  active?: boolean;
 };
 
 export default function Header() {
@@ -148,7 +150,8 @@ export default function Header() {
                   <p className="text-sm font-semibold text-gray-900">{user.firstname} {user.lastname}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
                 </div>
-                <div className="px-4 py-2">
+                <div className="px-4 py-2 flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${user.active ? 'bg-green-500' : 'bg-red-400'}`} title={user.active ? 'Active now' : 'Offline'} />
                   <span className={`inline-block text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${
                     user.role === 'admin' ? 'bg-red-100 text-red-700' :
                     user.role === 'staff' ? 'bg-blue-100 text-blue-700' :

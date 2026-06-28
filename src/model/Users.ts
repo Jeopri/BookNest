@@ -8,6 +8,8 @@ interface IUser extends Document {
     password?: string;
     image?: string;
     role: 'admin' | 'customer' | 'staff';
+    active: boolean;
+    lastActive?: Date;
     createdAt?: Date;
     updatedAt?: Date;
     id: string;
@@ -40,6 +42,13 @@ const UserSchema: Schema<IUser> = new mongoose.Schema(
       image: {
         type: String,
         default: '',
+      },
+      active: {
+        type: Boolean,
+        default: false,
+      },
+      lastActive: {
+        type: Date,
       },
       createdAt: { type: Date },
       updatedAt: { type: Date }
