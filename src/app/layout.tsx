@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
-import type { Metadata } from "next";
+import PWARegister from "@/components/util/PWARegister";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -14,8 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Appoint",
-  description: "Made with by Jeffrey Sedoro",
+  title: "Book Inventory",
+  description: "Book inventory management system",
+  manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1e293b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -28,9 +37,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-       
-        {children}   
+        {children}
         <Toaster />
+        <PWARegister />
       </body>
     </html>
   );

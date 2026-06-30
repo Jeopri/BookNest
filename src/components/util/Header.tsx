@@ -1,5 +1,6 @@
 'use client';
 import { Bell, BookOpen, Menu, X } from 'lucide-react';
+import Image from 'next/image';
 import { useSidebar } from '@/context/SidebarContext';
 import { useEffect, useRef, useState } from 'react';
 
@@ -138,7 +139,7 @@ export default function Header() {
           <div ref={userMenuRef} className="relative">
             <button onClick={() => setUserMenuOpen(o => !o)} className="flex items-center gap-2 focus:outline-none">
               {user?.image ? (
-                <img src={user.image} alt="" className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-400 transition" />
+                <Image src={user.image} alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-400 transition" />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gray-200 cursor-pointer hover:ring-2 hover:ring-blue-400 transition" />
               )}

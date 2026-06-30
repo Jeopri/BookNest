@@ -49,3 +49,27 @@ export async function GET() {
     );
   }
 }
+
+export async function POST() {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.email) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+  try {
+    await connectToDatabase();
+    await User.findOneAndUpdate(
+      { email: session.user.email },
+      { active: false }
+    );
+    return NextResponse.json({ message: "Logged out" });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
+  }
+}
